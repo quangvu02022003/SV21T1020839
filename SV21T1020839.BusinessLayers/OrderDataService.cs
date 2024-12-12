@@ -1,12 +1,13 @@
-﻿using SV21T1020839.DataLayers.SQLServer;
+﻿
 using SV21T1020839.DataLayers;
 using SV21T1020839.DomainModels;
+using SV21T1020839.DataLayers.SQLServer;
 
 namespace SV21T1020839.BusinessLayers
 {
     public static class OrderDataService
     {
-        private static readonly IOrderDAL<Order> orderDB;
+        private static readonly OrderDAL orderDB;
         /// <summary>
 
         /// Ctor

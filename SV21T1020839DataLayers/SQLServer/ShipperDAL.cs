@@ -147,7 +147,7 @@ namespace SV21T1020839.DataLayers.SQLServer
                                 update Shippers
                                 set 
                                     ShipperName = @ShipperName,
-                                    Phone = @Phone,
+                                    Phone = @Phone
                                 where ShipperID = @ShipperID
                          end";
 

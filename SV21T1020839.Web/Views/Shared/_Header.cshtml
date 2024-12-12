@@ -1,4 +1,4 @@
-﻿<header class="main-header">
+﻿ <header class="main-header">
     <!-- Logo -->
     <a href="~/" class="logo">
         <!-- mini logo for sidebar mini 50x50 pixels -->
@@ -18,33 +18,41 @@
 
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">
-                <!-- User Account: style can be found in dropdown.less -->
-                <li class="dropdown user user-menu">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <img src="~/themes/dist/img/user2-160x160.jpg" class="user-image" alt="User Image">
-                        <span class="hidden-xs">Lê Quang Vũ</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <!-- User image -->
-                        <li class="user-header">
-                            <img src="~/themes/dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
 
-                            <p>
-                                Le Quang Vu
-                            </p>
+                @{
+                    var userData = User.GetUserData();
+                    if(userData!= null)
+                    {
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <img src="~/images/employees/@userData.Photo" class="user-image" alt="User Image">
+                                <span class="hidden-xs">@userData.DisplayName</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="~/images/employees/@userData.Photo" class="img-circle" alt="User Image">
+
+                                    <p>
+                                        @userData.DisplayName
+                                    </p>
+                                </li>
+
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <a href="~/Account/ChangePassword" class="btn btn-default btn-flat">Đổi mật khẩu</a>
+                                    </div>
+                                    <div class="pull-right">
+                                        <a href="~/Account/Logout" class="btn btn-default btn-flat">Thoát</a>
+                                    </div>
+                                </li>
+                            </ul>
                         </li>
-     
-                        <!-- Menu Footer-->
-                        <li class="user-footer">
-                            <div class="pull-left">
-                                <a href="~/Account/ChangePassword" class="btn btn-default btn-flat">Đổi mật khẩu</a>
-                            </div>
-                            <div class="pull-right">
-                                <a href="~/Account/Logout" class="btn btn-default btn-flat">Thoát</a>
-                            </div>
-                        </li>
-                    </ul>
-                </li>
+                    }
+                }
+                <!-- User Account: style can be found in dropdown.less -->
+                
             </ul>
         </div>
     </nav>

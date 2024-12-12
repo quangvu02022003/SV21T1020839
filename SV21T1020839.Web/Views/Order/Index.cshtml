@@ -41,8 +41,37 @@
     </div>
 </div>
 
-
 @section scripts {
+    <script>
+        function doSearch(page) {
+            var searchCondition = $("#frmSearchInput").serializeArray();
+            searchCondition.push({ name: "page", value: page });
+
+            var action = $("#frmSearchInput").prop("action");
+            var method = $("#frmSearchInput").prop("method");
+
+            $.ajax({
+                url: action,
+                type: method,
+                data: searchCondition,
+                success: function (data) {
+                    $("#searchResult").html(data);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            doSearch(@Model.Page);
+            $("#frmSearchInput").submit(function (e) {
+                e.preventDefault();
+                doSearch(1);
+            });
+        });
+    </script>
+}
+
+
+@* @section scripts {
     <script>
         function doSearch(page) {
             var searchCondition = $("#frmSearchInput").serializeArray();
@@ -69,7 +98,7 @@
             })
         });
     </script>
-}
+}*@
 
 
 

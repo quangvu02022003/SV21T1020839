@@ -4,6 +4,7 @@ using SV21T1020839.Web;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews()
     .AddMvcOptions(option =>
@@ -27,14 +28,22 @@ builder.Services.AddSession(option =>
 
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+app.UseStaticFiles();
+
 // Kh?i t?o c?u hình cho BussinessLayer
 string connectionString = builder.Configuration.GetConnectionString("SV21T1020839");
 SV21T1020839.BusinessLayers.Configuration.Initialize(connectionString);
 // Configure the HTTP request pipeline.
 app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseSession();
 
 app.MapControllerRoute(

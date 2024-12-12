@@ -8,7 +8,7 @@ using DataLayers.SQLServer;
 
 public static class CommonDataService
     {
-    private static readonly ISimpleQueryDAL<Province> provinceDB;
+        private static readonly ISimpleQueryDAL<Province> provinceDB;
         private static readonly ICommonDAL<Customer> customerDB;
         private static readonly ICommonDAL<Category> categoryDB;
         private static readonly ICommonDAL<Supplier> supplierDB;
@@ -45,8 +45,13 @@ public static class CommonDataService
             rowCount = customerDB.Count(searchValue);
             return customerDB.List(page, pageSize, searchValue);
         }
-        
-        public static Customer? GetCustomer(int id)
+    public static List<Customer> ListOfCustomers()
+    {
+
+        return customerDB.List();
+    }
+
+    public static Customer? GetCustomer(int id)
         {
             return customerDB.Get(id);
         }
@@ -69,11 +74,16 @@ public static class CommonDataService
             {
                 return customerDB.Delete(id);
             }
+
         public static List<Category> ListOfCategories(out int rowCount, int page = 1, int pageSize = 0, string searchValue = "")
-            {
-                rowCount = categoryDB.Count(searchValue);
-                return categoryDB.List(page, pageSize, searchValue);
-            }
+        {
+            rowCount = categoryDB.Count(searchValue);
+            return categoryDB.List(page, pageSize, searchValue);
+        }
+        public static List<Category> ListOfCategories(int page = 1, int pageSize = 0, string searchValue = "")
+        {
+            return categoryDB.List(page, pageSize, searchValue);
+        }
     public static Category? GetCategory(int id)
     {
         return categoryDB.Get(id);
@@ -97,11 +107,15 @@ public static class CommonDataService
     {
         return categoryDB.Delete(id);
     }
-    public static List<Supplier> ListOfSuppliers(out int rowCount, int page = 1, int pageSize = 0, string searchValue = "")
+    public static List<Supplier> ListOfSuppliers(out int rowCount, int page = 1, int pageSize = 0, string seachValue = "")
     {
-            rowCount = supplierDB.Count(searchValue);
-            return supplierDB.List(page, pageSize, searchValue);
-        }
+        rowCount = supplierDB.Count(seachValue);
+        return supplierDB.List(page, pageSize, seachValue);
+    }
+    public static List<Supplier> ListOfSuppliers(int page = 1, int pageSize = 0, string searchValue = "")
+    {
+        return supplierDB.List(page, pageSize, searchValue);
+    }
     public static Supplier? GetSupplier(int id)
     {
         return supplierDB.Get(id);

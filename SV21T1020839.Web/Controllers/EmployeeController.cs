@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SV21T1020839.DomainModels;
+using SV21T1020839.Web.AppCodes;
 using SV21T1020839.Web.Models;
 using System.Globalization;
 
 namespace SV21T1020839.Web.Controllers
 {
+    [Authorize(Roles = $"{WebUserRoles.ADMIN}")]
     public class EmployeeController : Controller
     {
         public const int PAGE_SIZE = 9;

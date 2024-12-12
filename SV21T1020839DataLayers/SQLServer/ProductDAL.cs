@@ -1,15 +1,15 @@
 ﻿using Dapper;
 using DataLayers.SQLServer;
+using SV21T1020839.DataLayers.SQLServer;
 using SV21T1020839.DomainModels;
 using System.Data;
 
 namespace SV21T1020839.DataLayers.SQLServer
 {
-    public class ProductDAL : BaseDAL, IProductDAL<Product>
+    public class ProductDAL : BaseDAL, IProductDAL
     {
         public ProductDAL(string connectionString) : base(connectionString)
         {
-
         }
 
         public int Add(Product data)
@@ -17,81 +17,69 @@ namespace SV21T1020839.DataLayers.SQLServer
             int id = 0;
             using (var connection = Openconnection())
             {
-                var sql = @"
-                            IF EXISTS (SELECT * FROM Products WHERE ProductName = @ProductName)
-                            SELECT -1; 
-                            ELSE
-                            BEGIN 
-                                INSERT INTO Products (ProductName, ProductDescription, SupplierID, CategoryID, Unit, Price, Photo, IsSelling)
-                                VALUES (@ProductName, @ProductDescription, @SupplierID, @CategoryID, @Unit, @Price, @Photo, @IsSelling);
-                                SELECT CAST(SCOPE_IDENTITY() AS INT); 
-                            END";
-
-                var parameter = new
+                var sql = @"INSERT INTO Products(ProductName, ProductDescription, SupplierID, CategoryID, Unit, Price, Photo, IsSelling)
+                            VALUES(@ProductName, @ProductDescription, @SupplierID, @CategoryID, @Unit, @Price, @Photo, @IsSelling);
+                            SELECT SCOPE_IDENTITY();";
+                var parameters = new
                 {
-                    ProductName = data.ProductName ?? "",
-                    ProductDescription = data.ProductDescription ?? "",
-                    SupplierID = data.SupplierID,
-                    CategoryID = data.CategoryID,
-                    Unit = data.Unit ?? "",
-                    Price = data.Price,
-                    Photo = data.Photo ?? "",
-                    IsSelling = data.IsSelling
+                    data.ProductName,
+                    data.ProductDescription,
+                    data.SupplierID,
+                    data.CategoryID,
+                    data.Unit,
+                    data.Price,
+                    data.Photo,
+                    data.IsSelling,
                 };
-
-                id = connection.ExecuteScalar<int>(sql: sql, param: parameter, commandType: CommandType.Text);
+                id = connection.ExecuteScalar<int>(sql: sql, param: parameters, commandType: CommandType.Text);
                 connection.Close();
             }
-            return id;
 
+            return id;
         }
 
         public long AddAttribute(ProductAttribute data)
         {
-            long id = 0;
+            int id = 0;
             using (var connection = Openconnection())
             {
-                var sql = @"
-                            INSERT INTO ProductAttributes (ProductID, AttributeName, AttributeValue, DisplayOrder)
+                var sql = @"INSERT INTO ProductAttributes(ProductID, AttributeName, AttributeValue, DisplayOrder)
                             VALUES (@ProductID, @AttributeName, @AttributeValue, @DisplayOrder);
-                            SELECT CAST(SCOPE_IDENTITY() AS BIGINT);";
-
-                var parameter = new
+                            SELECT SCOPE_IDENTITY();";
+                var parameters = new
                 {
-                    ProductID = data.ProductId,
-                    AttributeName = data.AttributeName ?? "",
-                    AttributeValue = data.AttributeValue ?? "",
-                    DisplayOrder = data.DisplayOrder
+                    data.ProductID,
+                    data.AttributeName,
+                    data.AttributeValue,
+                    data.DisplayOrder,
                 };
-
-                id = connection.ExecuteScalar<long>(sql: sql, param: parameter, commandType: CommandType.Text);
+                id = connection.ExecuteScalar<int>(sql: sql, param: parameters, commandType: CommandType.Text);
                 connection.Close();
             }
+
             return id;
         }
 
         public long AddPhoto(ProductPhoto data)
         {
-            long id = 0;
+            int id = 0;
             using (var connection = Openconnection())
             {
-                var sql = @"
-                            INSERT INTO ProductPhotos (ProductID, Photo, Description, DisplayOrder, IsHidden)
-                            VALUES (@ProductID, @Photo, @Description, @DisplayOrder, @IsHidden);
-                            SELECT CAST(SCOPE_IDENTITY() AS BIGINT);";
-
-                var parameter = new
+                var sql = @"INSERT INTO ProductPhotos(ProductID, Photo, Description, DisplayOrder, IsHidden)
+                            VALUES(@ProductID, @Photo, @Description, @DisplayOrder, @IsHidden);
+                            SELECT SCOPE_IDENTITY();";
+                var parameters = new
                 {
-                    ProductID = data.ProductID,
-                    Photo = data.Photo ?? "", // Đường dẫn ảnh
-                    Description = data.Description ?? "", // Mô tả ảnh
-                    DisplayOrder = data.DisplayOrder, // Thứ tự hiển thị
-                    IsHidden = data.IsHidden // Trạng thái ẩn
+                    data.ProductID,
+                    data.Photo,
+                    data.Description,
+                    data.DisplayOrder,
+                    data.IsHidden,
                 };
-
-                id = connection.ExecuteScalar<long>(sql: sql, param: parameter, commandType: CommandType.Text);
+                id = connection.ExecuteScalar<int>(sql: sql, param: parameters, commandType: CommandType.Text);
                 connection.Close();
             }
+
             return id;
         }
 
@@ -101,25 +89,23 @@ namespace SV21T1020839.DataLayers.SQLServer
             searchValue = $"%{searchValue}%";
             using (var connection = Openconnection())
             {
-                var sql = @"
-                            SELECT COUNT(*)
+                var sql = @"SELECT COUNT(*)
                             FROM Products
                             WHERE (@SearchValue = N'' OR ProductName LIKE @SearchValue)
-                              AND (@CategoryID = 0 OR CategoryID = @CategoryID)
-                              AND (@SupplierID = 0 OR SupplierID = @SupplierID)
-                              AND (Price >= @MinPrice)
-                              AND (@MaxPrice <= 0 OR Price <= @MaxPrice)";
-
+                                AND (@CategoryID = 0 OR CategoryID = @CategoryID)
+                                AND (@SupplierID = 0 OR SupplierId = @SupplierID)
+                                AND (Price >= @MinPrice)
+                                AND (@MaxPrice <= 0 OR Price <= @MaxPrice)";
                 var parameters = new
                 {
                     SearchValue = searchValue,
                     CategoryID = categoryID,
                     SupplierID = supplierID,
                     MinPrice = minPrice,
-                    MaxPrice = maxPrice
+                    MaxPrice = maxPrice,
                 };
-
-                count = connection.ExecuteScalar<int>(sql: sql, param: parameters, commandType: CommandType.Text);
+                count = connection.ExecuteScalar<int>(sql, parameters, commandType: CommandType.Text);
+                connection.Close();
             }
             return count;
         }
@@ -129,12 +115,12 @@ namespace SV21T1020839.DataLayers.SQLServer
             bool result = false;
             using (var connection = Openconnection())
             {
-                var sql = @"DELETE FROM Products WHERE ProductID = @ProductID";
-                var parameter = new
-                {
-                    ProductID = productID
-                };
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                var sql = @"DELETE FROM Products WHERE ProductID = @ProductID
+                                AND NOT EXISTS(SELECT * FROM ProductAttributes WHERE ProductID = @ProductID)
+                                AND NOT EXISTS(SELECT * FROM ProductPhotos WHERE ProductID = @ProductID)
+                                AND NOT EXISTS(SELECT * FROM OrderDetails WHERE ProductID = @ProductID)";
+                var parameters = new { ProductID = productID };
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
             return result;
@@ -146,11 +132,8 @@ namespace SV21T1020839.DataLayers.SQLServer
             using (var connection = Openconnection())
             {
                 var sql = @"DELETE FROM ProductAttributes WHERE AttributeID = @AttributeID";
-                var parameter = new
-                {
-                    AttributeID = attributeID
-                };
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                var parameters = new { AttributeID = attributeID };
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
             return result;
@@ -162,11 +145,8 @@ namespace SV21T1020839.DataLayers.SQLServer
             using (var connection = Openconnection())
             {
                 var sql = @"DELETE FROM ProductPhotos WHERE PhotoID = @PhotoID";
-                var parameter = new
-                {
-                    PhotoID = photoID
-                };
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                var parameters = new { PhotoID = photoID };
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
             return result;
@@ -174,247 +154,361 @@ namespace SV21T1020839.DataLayers.SQLServer
 
         public Product? Get(int productID)
         {
-            throw new NotImplementedException();
+            Product? data = null;
+            using (var connection = Openconnection())
+            {
+                var sql = @"SELECT * FROM Products WHERE ProductID = @ProductID";
+                var parameters = new
+                {
+                    ProductID = productID
+                };
+                data = connection.QueryFirstOrDefault<Product>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return data;
         }
 
         public ProductAttribute? GetAttribute(long attributeID)
         {
-            throw new NotImplementedException();
+            ProductAttribute? data = null;
+            using (var connection = Openconnection())
+            {
+                var sql = @"SELECT * FROM ProductAttributes WHERE AttributeID = @AttributeID";
+                var parameters = new
+                {
+                    AttributeID = attributeID
+                };
+                data = connection.QueryFirstOrDefault<ProductAttribute>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return data;
         }
 
         public ProductPhoto? GetPhoto(long photoID)
         {
-            throw new NotImplementedException();
+            ProductPhoto? data = null;
+            using (var connection = Openconnection())
+            {
+                var sql = @"SELECT * FROM ProductPhotos WHERE PhotoID = @PhotoID";
+                var parameters = new
+                {
+                    PhotoID = photoID
+                };
+                data = connection.QueryFirstOrDefault<ProductPhoto>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return data;
         }
 
         public bool InUsed(int productID)
         {
             bool result = false;
+
             using (var connection = Openconnection())
             {
-                var sql = @"IF EXISTS (SELECT * FROM OrderDetails WHERE ProductID = @ProductID)
+                var sql = @"IF EXISTS (SELECT * FROM ProductAttributes WHERE ProductID = @ProductID)
+                                OR EXISTS (SELECT * FROM ProductPhotos WHERE ProductID = @ProductID)
+                                OR EXISTS (SELECT * FROM OrderDetails WHERE ProductID = @ProductID)
                                 SELECT 1
                             ELSE
                                 SELECT 0";
-                var parameter = new
+                var parameters = new
                 {
                     ProductID = productID
                 };
-                result = connection.ExecuteScalar<bool>(sql: sql, param: parameter, commandType: CommandType.Text);
+                result = connection.ExecuteScalar<bool>(sql, parameters, commandType: CommandType.Text);
                 connection.Close();
             }
+
             return result;
         }
 
         public List<Product> List(int page = 1, int pageSize = 0, string searchValue = "", int categoryID = 0, int supplierID = 0, decimal minPrice = 0, decimal maxPrice = 0)
         {
-            List<Product> data = new List<Product>();
-            searchValue = $"%{searchValue}%";
-
-            using (var connection = Openconnection())
-            {
-                var sql = @"
-                   select * 
-                    from    (
-	                            select *, 
-	                            row_number() over(order by ProductName) as RowNumber
-	                            from Products
-	                            where (ProductName like @searchValue)
-                            )as t
-                    where (@pageSize = 0 or (RowNumber between (@page - 1) * @pageSize + 1 and @page * @pageSize))
-                    order by RowNumber ";
-
-                var parameters = new
-                {
-                    Page = page,
-                    PageSize = pageSize,
-                    SearchValue = searchValue,
-                    CategoryID = categoryID,
-                    SupplierID = supplierID,
-                    MinPrice = minPrice,
-                    MaxPrice = maxPrice
-                };
-
-                data = connection.Query<Product>(sql: sql, param: parameters, commandType: CommandType.Text).ToList();
-                connection.Close();
-            }
-            return data;
-            /*List<Product> data = new List<Product>();
+            List<Product> data = [];
             searchValue = $"%{searchValue}%";
             using (var connection = Openconnection())
             {
                 var sql = @"SELECT *
-                                FROM (
-                                SELECT *,
-                                ROW_NUMBER() OVER(ORDER BY ProductName) AS RowNumber
-                                FROM Products
-                                WHERE (@SearchValue = N'' OR ProductName LIKE @SearchValue)
+                            FROM (
+                              SELECT ROW_NUMBER() OVER (ORDER BY ProductName) AS RowNumber, *
+                              FROM Products
+                              WHERE (ProductName LIKE @SearchValue)
                                 AND (@CategoryID = 0 OR CategoryID = @CategoryID)
-                                AND (@SupplierID = 0 OR SupplierId = @SupplierID)
+                                AND (@SupplierID = 0 OR SupplierID = @SupplierID)
                                 AND (Price >= @MinPrice)
                                 AND (@MaxPrice <= 0 OR Price <= @MaxPrice)
-                                ) AS t
-                                WHERE (@PageSize = 0)
-                                OR (RowNumber BETWEEN (@Page - 1)*@PageSize + 1 AND @Page * @PageSize);";
+                            ) AS t
+                            WHERE (@PageSize = 0)
+                              OR (RowNumber BETWEEN (@Page - 1) * @PageSize + 1 AND @Page * @PageSize)";
                 var parameters = new
                 {
-                    page = page,
-                    pageSize = pageSize,
-                    searchValue = searchValue,
-                    categoryID = categoryID,
-                    supplierID = supplierID,
-                    minPrice = minPrice,
-                    maxPrice = maxPrice
-                    //ben trai la ten tham so trong cau lenh sql, ben phai la value truyen cho tham so
+                    SearchValue = searchValue,
+                    CategoryID = categoryID,
+                    SupplierID = supplierID,
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice,
+                    PageSize = pageSize,
+                    Page = page,
                 };
-                data = connection.Query<Product>(sql: sql, param: parameters, commandType: System.Data.CommandType.Text).ToList();
-            }
-            return data;*/
-        }
-
-        public IList<ProductAttribute> ListAttributes(int productID)
-        {
-            IList<ProductAttribute> data = new List<ProductAttribute>();
-
-            using (var connection = Openconnection())
-            {
-                var sql = @"SELECT * 
-                    FROM ProductAttribute 
-                    WHERE ProductID = @ProductID 
-                    ORDER BY DisplayOrder";
-
-                var parameter = new
-                {
-                    ProductID = productID
-                };
-
-                data = connection.Query<ProductAttribute>(sql: sql, param: parameter, commandType: CommandType.Text).ToList();
+                data = connection.Query<Product>(sql: sql, param: parameters, commandType: CommandType.Text).ToList();
                 connection.Close();
             }
-
             return data;
         }
 
-        public IList<ProductPhoto> ListPhotos(int productID)
+        public List<ProductAttribute> ListAttributes(int productID)
         {
-            IList<ProductPhoto> data = new List<ProductPhoto>();
-
+            List<ProductAttribute> data = [];
             using (var connection = Openconnection())
             {
-                var sql = @"SELECT * 
-                    FROM ProductPhoto 
-                    WHERE ProductID = @ProductID 
-                    ORDER BY DisplayOrder";
-
-                var parameter = new
+                var sql = @"SELECT * FROM ProductAttributes WHERE ProductID = @ProductID ORDER BY DisplayOrder ASC";
+                var parameters = new
                 {
                     ProductID = productID
                 };
-
-                data = connection.Query<ProductPhoto>(sql: sql, param: parameter, commandType: CommandType.Text).ToList();
+                data = connection.Query<ProductAttribute>(sql, parameters, commandType: CommandType.Text).ToList();
                 connection.Close();
             }
+            return data;
+        }
 
+        public List<ProductPhoto> ListPhotos(int productID)
+        {
+            List<ProductPhoto> data = [];
+            using (var connection = Openconnection())
+            {
+                var sql = @"SELECT * FROM ProductPhotos WHERE ProductID = @ProductID ORDER BY DisplayOrder ASC";
+                var parameters = new
+                {
+                    ProductID = productID
+                };
+                data = connection.Query<ProductPhoto>(sql, parameters, commandType: CommandType.Text).ToList();
+                connection.Close();
+            }
             return data;
         }
 
         public bool Update(Product data)
         {
             bool result = false;
-
             using (var connection = Openconnection())
             {
-                var sql = @"IF NOT EXISTS (SELECT * FROM Products WHERE ProductID <> @ProductID AND ProductName = @ProductName)
-                            BEGIN 
-                                UPDATE Products
-                                SET ProductDescription = @ProductDescription,
-                                    SupplierID = @SupplierID,
-                                    CategoryID = @CategoryID,
-                                    Unit = @Unit,
-                                    Price = @Price,
-                                    Photo = @Photo,
-                                    IsSelling = @IsSelling
-                                WHERE ProductID = @ProductID
-                            END";
-
-                var parameter = new
+                var sql = @"UPDATE Products
+                            SET ProductName = @ProductName,
+                                ProductDescription = @ProductDescription,
+                                SupplierID = @SupplierID,
+                                CategoryID = @CategoryID,
+                                Unit = @Unit,
+                                Price = @Price,
+                                Photo = @Photo,
+                                IsSelling = @IsSelling
+                            WHERE ProductID = @ProductID";
+                var parameters = new
                 {
                     ProductID = data.ProductID,
-                    ProductName = data.ProductName ?? "",
-                    ProductDescription = data.ProductDescription ?? "",
+                    ProductName = data.ProductName,
+                    ProductDescription = data.ProductDescription,
                     SupplierID = data.SupplierID,
                     CategoryID = data.CategoryID,
-                    Unit = data.Unit ?? "",
+                    Unit = data.Unit,
                     Price = data.Price,
-                    Photo = data.Photo ?? "",
-                    IsSelling = data.IsSelling
+                    Photo = data.Photo,
+                    IsSelling = data.IsSelling,
                 };
-
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
-
             return result;
         }
 
         public bool UpdateAttribute(ProductAttribute data)
         {
             bool result = false;
-
             using (var connection = Openconnection())
             {
-                var sql = @"IF NOT EXISTS (SELECT * FROM ProductAttributes WHERE AttributeID <> @AttributeID AND ProductID = @ProductID AND AttributeName = @AttributeName)
-                    BEGIN 
-                        UPDATE ProductAttributes
-                        SET AttributeValue = @AttributeValue,
-                            DisplayOrder = @DisplayOrder
-                        WHERE AttributeID = @AttributeID
-                    END";
-
-                var parameter = new
+                var sql = @"UPDATE ProductAttributes
+                            SET ProductID = @ProductID,
+                                AttributeName = @AttributeName,
+                                AttributeValue = @AttributeValue,
+                                DisplayOrder = @DisplayOrder
+                            WHERE AttributeID = @AttributeID";
+                var parameters = new
                 {
-                    AttributeID = data.AttributeId,
-                    ProductID = data.ProductId,
-                    AttributeName = data.AttributeName ?? "",
-                    AttributeValue = data.AttributeValue ?? "",
-                    DisplayOrder = data.DisplayOrder
+                    data.ProductID,
+                    data.AttributeName,
+                    data.AttributeValue,
+                    data.DisplayOrder,
+                    data.AttributeID,
                 };
-
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
-
             return result;
         }
 
         public bool UpdatePhoto(ProductPhoto data)
         {
             bool result = false;
-
             using (var connection = Openconnection())
             {
-                var sql = @"IF NOT EXISTS (SELECT * FROM ProductPhotos WHERE PhotoID <> @PhotoID AND ProductID = @ProductID AND Description = @Description)
-                    BEGIN 
-                        UPDATE ProductPhotos
-                        SET DisplayOrder = @DisplayOrder,
-                            IsHidden = @IsHidden
-                        WHERE PhotoID = @PhotoID
-                    END";
-
-                var parameter = new
+                var sql = @"UPDATE ProductPhotos
+                            SET ProductID = @ProductID,
+                                Photo = @Photo,
+                                Description = @Description,
+                                DisplayOrder = @DisplayOrder,
+                                IsHidden = @IsHidden
+                            WHERE PhotoID = @PhotoID";
+                var parameters = new
                 {
-                    PhotoID = data.PhotoID,
-                    ProductID = data.ProductID,
-                    Description = data.Description ?? "",
-                    DisplayOrder = data.DisplayOrder,
-                    IsHidden = data.IsHidden
+                    data.ProductID,
+                    data.Photo,
+                    data.Description,
+                    data.DisplayOrder,
+                    data.IsHidden,
+                    data.PhotoID,
                 };
-
-                result = connection.Execute(sql: sql, param: parameter, commandType: CommandType.Text) > 0;
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
                 connection.Close();
             }
-
             return result;
         }
+
+        public bool ExistsDisplayOrderPhoto(int ProductID, int DisplayOrder, long PhotoID)
+        {
+            bool result = false;
+            using (var connection = Openconnection())
+            {
+                var sql = @"IF EXISTS ( SELECT PhotoID FROM ProductPhotos
+                                        WHERE ProductID = @ProductID
+                                            AND DisplayOrder = @DisplayOrder
+                                            AND PhotoID <> @PhotoID)
+                                SELECT 1
+                            ELSE
+                                SELECT 0";
+                var parameters = new
+                {
+                    ProductID,
+                    DisplayOrder,
+                    PhotoID,
+                };
+                result = connection.ExecuteScalar<bool>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return result;
+        }
+
+        public long GetConflictingAttributeID(int productID, int displayOrder, long attributeID)
+        {
+            long conflictingAttributeID = 0;
+            using (var connection = Openconnection())
+            {
+                var sql = @"IF EXISTS ( SELECT AttributeID FROM ProductAttributes
+                                        WHERE ProductID = @ProductID
+                                            AND DisplayOrder = @DisplayOrder
+                                            AND AttributeID <> @AttributeID)
+                                SELECT AttributeID FROM ProductAttributes
+                                WHERE ProductID = @ProductID
+                                AND DisplayOrder = @DisplayOrder
+                            ELSE
+                                SELECT 0";
+                var parameters = new
+                {
+                    ProductID = productID,
+                    DisplayOrder = displayOrder,
+                    AttributeID = attributeID,
+                };
+                conflictingAttributeID = connection.ExecuteScalar<long>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return conflictingAttributeID;
+        }
+
+        public long GetConflictingPhotoID(int productID, int displayOrder, long photoID)
+        {
+            long conflictingPhotoID = 0;
+            using (var connection = Openconnection())
+            {
+                var sql = @"IF EXISTS ( SELECT PhotoID FROM ProductPhotos
+                                        WHERE ProductID = @ProductID
+                                            AND DisplayOrder = @DisplayOrder
+                                            AND PhotoID <> @PhotoID)
+                                SELECT PhotoID FROM ProductPhotos
+                                WHERE ProductID = @ProductID
+                                AND DisplayOrder = @DisplayOrder
+                            ELSE
+                                SELECT 0";
+                var parameters = new
+                {
+                    ProductID = productID,
+                    DisplayOrder = displayOrder,
+                    PhotoID = photoID,
+                };
+                conflictingPhotoID = connection.ExecuteScalar<long>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return conflictingPhotoID;
+        }
+
+        public bool ExistsAttribute(int ProductID, string AttributeName, string AttributeValue, long AttributeID)
+        {
+            bool result = false;
+            using (var connection = Openconnection())
+            {
+                var sql = @"IF EXISTS ( SELECT AttributeID FROM ProductAttributes
+                                        WHERE ProductID = @ProductID
+                                            AND AttributeName = @AttributeName
+                                            AND AttributeValue = @AttributeValue
+                                            AND AttributeID <> @AttributeID)
+                                SELECT 1
+                            ELSE
+                                SELECT 0";
+                var parameters = new
+                {
+                    ProductID,
+                    AttributeName,
+                    AttributeValue,
+                    AttributeID,
+                };
+                result = connection.ExecuteScalar<bool>(sql: sql, param: parameters, commandType: CommandType.Text);
+                connection.Close();
+            }
+            return result;
+        }
+
+        IList<ProductAttribute> IProductDAL.ListAttributes(int productID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ProductAttribute? GetProductAttribute(long attributeID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HiddenPhoto(long photoID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HiddenPhoto(long photoID, bool isHidden)
+        {
+            bool result = false;
+            using (var connection = Openconnection())
+            {
+                var sql = @"UPDATE ProductPhotos
+                            SET IsHidden = @IsHidden
+                            WHERE PhotoID = @PhotoID";
+                var parameters = new
+                {
+                    isHidden,
+                    photoID,
+                };
+                result = connection.Execute(sql: sql, param: parameters, commandType: CommandType.Text) > 0;
+                connection.Close();
+            }
+            return result;
+        }
+
     }
 }

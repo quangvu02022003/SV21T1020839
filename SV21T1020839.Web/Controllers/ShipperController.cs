@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SV21T1020839.DomainModels;
+using SV21T1020839.Web.AppCodes;
 using SV21T1020839.Web.Models;
 
 namespace SV21T1020839.Web.Controllers
 {
+    [Authorize(Roles = $"{WebUserRoles.ADMIN},{WebUserRoles.MANAGER}")]
     public class ShipperController : Controller
     {
         public const int PAGE_SIZE = 5;

@@ -1,10 +1,9 @@
-﻿@model SV21T1020839.Web.Models.ProductSearchResult
+﻿@model SV21T1020839.Web.Models.ProductsSearchResult;
 @{
     Layout = null;
 }
-
 <p style="margin:10px 0 10px 0">
-    Có <b>@Model.RowCount</b> mặt hàng trong tổng số <b>@Model.PageCount</b> trang
+    Có <strong>@Model.RowCount</strong> mặt hàng trong tổng số <strong>@Model.PageCount</strong> trang
 </p>
 
 <div class="table-responsive">
@@ -23,14 +22,14 @@
             {
                 <tr>
                     <td>
-                        <img class="profile-user-img img-responsive img-bordered" src="~/images/products/@(string.IsNullOrWhiteSpace(item.Photo) ? "nophoto.png" : item.Photo )"
-                             style="border: 1px solid black; width: 100%; object-fit: cover;">
+                        <img src="@Url.Content(item.Photo != null ? $"~/images/products/{item.Photo}" : "~/images/products/nophoto.png")" style="width:100%" />
                     </td>
+
                     <td>
                         @item.ProductName
                     </td>
                     <td>@item.Unit</td>
-                    <td>@item.Price.ToString("N0")</td>
+                    <td>@string.Format("{0:N0}", item.Price)</td>
                     <td class="text-right">
                         <a href="~/Product/Edit/@item.ProductID" class="btn btn-xs btn-info">
                             <i class="fa fa-edit"></i>
@@ -44,14 +43,13 @@
         </tbody>
     </table>
 </div>
-
 <div class="text-center">
     <ul class="pagination">
         @for (int p = 1; p <= Model.PageCount; p++)
         {
             if (p == Model.Page)
             {
-                <li class="active"><a class="page-link" href="#">@p</a></li>
+                <li class="active"><a href="#">@p</a></li>
             }
             else
             {

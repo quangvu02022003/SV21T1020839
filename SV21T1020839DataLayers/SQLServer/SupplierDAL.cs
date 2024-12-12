@@ -155,7 +155,7 @@ namespace SV21T1020839.DataLayers.SQLServer
                                     Province = @Province,
                                     Address = @Address,
                                     Phone = @Phone,
-                                    Email = @Email,
+                                    Email = @Email
                                 where SupplierID = @SupplierID
                            end";
 
